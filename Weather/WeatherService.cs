@@ -20,6 +20,7 @@ namespace Weather
             };
             Client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0");
             Client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+            Client.DefaultRequestHeaders.Referrer = new Uri("http://product.weather.com.cn");
         }
 
         public async Task<List<Alerm>> GetAlermListAsync()
@@ -60,6 +61,14 @@ namespace Weather
             }
 
             return alerms;
+        }
+
+        public async Task<CurrentState> GetCurrentStateAsync()
+        {
+            string str = await Client.GetStringAsync("http://d1.weather.com.cn/sk_2d/101010100.html");
+            str = str.Substring(str.IndexOf("{"));
+            CurrentState current = JsonSerializer.Deserialize<CurrentState>(str);
+            return current;
         }
     }
 }

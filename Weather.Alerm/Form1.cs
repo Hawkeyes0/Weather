@@ -24,6 +24,8 @@ namespace Weather.Alerm
 
         private HashSet<string> Codes { get; } = new HashSet<string>();
 
+        private Color[] colors = new Color[] { Color.Red, Color.Gray, Color.Blue };
+
         public Form1()
         {
             InitializeComponent();
@@ -36,6 +38,10 @@ namespace Weather.Alerm
             timer1_Tick(null, e);
             var area = Screen.AllScreens[0].WorkingArea;
             Location = new Point { X = area.Width - Width - 4, Y = area.Height - Height - 4 };
+
+            tState.Interval = (int)TimeSpan.FromMinutes(15).TotalMilliseconds;
+            tState.Start();
+            tState_Tick(null, null);
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -63,10 +69,12 @@ namespace Weather.Alerm
                         .AddArgument("conversationId", $"{a.LocationCode}_{a.AlermTime}_{a.AlermCode}")
                         .AddText($"{a.AlermTime:yyyy-MM-dd HH:mm:ss}发布")
                         .AddText($"{a.Name}-{Converter.ToText(a.AlermType, a.AlermLevel)}")
-                        .AddInlineImage(new Uri($"file:///{Path.GetFullPath(a.PicPath).Replace('\\','/')}"))
+                        .AddInlineImage(new Uri($"file:///{Path.GetFullPath(a.PicPath).Replace('\\', '/')}"))
                         .Show();
                 }
             }
+
+            _ = Codes.RemoveWhere(e => !rs.Any(a => a.RawAlerm == e));
 
             Trace.WriteLine($"Update data at {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
         }
@@ -74,12 +82,60 @@ namespace Weather.Alerm
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             timer1.Stop();
+            tState.Stop();
             notifyIcon1.Visible = false;
         }
 
         private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             WindowState = FormWindowState.Normal;
+        }
+
+        private async void tState_Tick(object sender, EventArgs e)
+        {
+            var state = await WeatherService.GetCurrentStateAsync();
+            lTime.Text = $"{state.date} {state.time} 实况";
+            lTemp.Text = $"{state.temp} ℃";
+            lSd.Text = $"相对湿度 {state.SD}";
+            lLimitNumber.Text = $"{state.limitnumber} 限行";
+            lWind.Text = $"{state.WD} {state.WS}";
+            lAqi.Text = $"空气质量 {state.aqi}";
+
+            lTemp.ForeColor = TempColor(state.temp);
+        }
+
+        private Color TempColor(string str)
+        {
+            int temp = Convert.ToInt32(str);
+            switch (temp)
+            {
+                case < -40:
+                    return colors[2];
+                case > 40:
+                    return colors[0];
+                case 0:
+                    return colors[1];
+                default:
+                    break;
+            }
+
+            double p = Math.Abs(temp) / 40d;
+
+            if (temp > 0)
+            {
+                return GetMidColor(colors[1], colors[0], p);
+            } else
+            {
+                return GetMidColor(colors[1], colors[2], p);
+            }
+        }
+
+        private static Color GetMidColor(Color color1, Color color2, double p)
+        {
+            byte r = (byte)(color1.R - (color1.R - color2.R) * p);
+            byte g = (byte)(color1.G - (color1.G - color2.G) * p);
+            byte b = (byte)(color1.B - (color1.B - color2.B) * p);
+            return Color.FromArgb(r, g, b);
         }
     }
 }
