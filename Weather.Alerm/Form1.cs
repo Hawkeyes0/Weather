@@ -47,7 +47,12 @@ namespace Weather.Alerm
         private void timer1_Tick(object sender, EventArgs e)
         {
             var alerms = WeatherService.GetAlermListAsync().Result;
-            var rs = alerms.Where(e => e.LocationCode == LocationCode);
+            if (alerms == null)
+            {
+                return;
+            }
+
+            var rs = alerms.Where(e => e.LocationCode == LocationCode || e.LocationCode == LocationCode[0..5]);
             flowLayoutPanel1.Controls.Clear();
             if (rs.Any())
             {
@@ -93,7 +98,9 @@ namespace Weather.Alerm
 
         private async void tState_Tick(object sender, EventArgs e)
         {
-            var state = await WeatherService.GetCurrentStateAsync();
+            var state = await WeatherService.GetCurrentStateAsync(LocationCode);
+            if (state == null) { return; }
+
             lTime.Text = $"{state.date} {state.time} 实况";
             lTemp.Text = $"{state.temp} ℃";
             lSd.Text = $"相对湿度 {state.SD}";
@@ -113,19 +120,21 @@ namespace Weather.Alerm
                     return colors[2];
                 case > 40:
                     return colors[0];
-                case 0:
+                case 24:
                     return colors[1];
                 default:
                     break;
             }
 
-            double p = Math.Abs(temp) / 40d;
 
-            if (temp > 0)
+            if (temp > 24)
             {
+                double p = (temp - 24d) / (40 - 24);
                 return GetMidColor(colors[1], colors[0], p);
-            } else
+            }
+            else
             {
+                double p = (temp - 24d) / (-40 - 24);
                 return GetMidColor(colors[1], colors[2], p);
             }
         }

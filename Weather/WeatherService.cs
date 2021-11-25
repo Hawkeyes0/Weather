@@ -26,10 +26,16 @@ namespace Weather
         public async Task<List<Alerm>> GetAlermListAsync()
         {
             string json = await Client.GetStringAsync("/alarm/grepalarm_cn.php").ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return null;
+            }
             int offset = json.IndexOf("[");
-            json = json.Substring(offset, json.LastIndexOf("]") - offset + 1);
+            if (offset == -1) { return null; }
+
+            json = json[offset..(json.LastIndexOf("]") + 1)];
             var rawdata = JsonSerializer.Deserialize<List<string[]>>(json);
-            List<Alerm> alerms = new List<Alerm>();
+            List<Alerm> alerms = new();
 
             foreach (string[] row in rawdata)
             {
@@ -63,10 +69,18 @@ namespace Weather
             return alerms;
         }
 
-        public async Task<CurrentState> GetCurrentStateAsync()
+        public async Task<CurrentState> GetCurrentStateAsync(string locationCode)
         {
-            string str = await Client.GetStringAsync("http://d1.weather.com.cn/sk_2d/101010100.html");
-            str = str.Substring(str.IndexOf("{"));
+            string str = await Client.GetStringAsync($"http://d1.weather.com.cn/sk_2d/{locationCode}.html");
+            if (string.IsNullOrWhiteSpace(str))
+            {
+                return null;
+            }
+
+            int offset = str.IndexOf("{");
+            if (offset == -1) { return null; }
+
+            str = str[offset..];
             CurrentState current = JsonSerializer.Deserialize<CurrentState>(str);
             return current;
         }
