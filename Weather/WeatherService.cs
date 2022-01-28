@@ -25,7 +25,16 @@ namespace Weather
 
         public async Task<List<Alerm>> GetAlermListAsync()
         {
-            string json = await Client.GetStringAsync("/alarm/grepalarm_cn.php").ConfigureAwait(false);
+            string json;
+            try
+            {
+                json = await Client.GetStringAsync("/alarm/grepalarm_cn.php").ConfigureAwait(false);
+            }
+            catch
+            {
+                return new List<Alerm>();
+            }
+
             if (string.IsNullOrWhiteSpace(json))
             {
                 return null;
@@ -71,7 +80,15 @@ namespace Weather
 
         public async Task<CurrentState> GetCurrentStateAsync(string locationCode)
         {
-            string str = await Client.GetStringAsync($"http://d1.weather.com.cn/sk_2d/{locationCode}.html");
+            string str;
+            try
+            {
+                str = await Client.GetStringAsync($"http://d1.weather.com.cn/sk_2d/{locationCode}.html").ConfigureAwait(false);
+            }
+            catch
+            {
+                return null;
+            }
             if (string.IsNullOrWhiteSpace(str))
             {
                 return null;
