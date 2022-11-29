@@ -10,7 +10,7 @@
 			"request": "launch",
 			"preLaunchTask": "build",
 			// If you have changed target frameworks, make sure to update the program path.
-			"program": "${workspaceFolder}/Weather.Alerm/bin/Debug/net5.0-windows/Weather.Alerm.dll",
+			"program": "${workspaceFolder}/Weather.Alerm/bin/Debug/net7.0-windows/Weather.Alerm.dll",
 			"args": [],
 			"cwd": "${workspaceFolder}/Weather.Alerm",
 			// For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
