@@ -24,8 +24,23 @@ namespace Weather.Entities
 
         public string RawAlerm { get; set; }
 
-        public string PicUrl => $"http://www.weather.com.cn/m2/i/about/alarmpic/{AlermCode}.gif";
+        private string GetImageCode()
+        {
+            if (!int.TryParse(AlermCode, out int number))
+            {
+                return "0000";
+            }
 
-        public string PicPath => $"Assets/{AlermCode}.gif";
+            if (number < 5000 || (9300 < number && number < 9400))
+            {
+                return AlermCode;
+            }
+
+            return "0000";
+        }
+
+        public string PicUrl => $"https://i.i8tq.com/alarm_icon/{AlermCode}.png";
+
+        public string PicPath => $"Assets/{AlermCode}.png";
     }
 }
