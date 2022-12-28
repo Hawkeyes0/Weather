@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Weather.Entities;
 
@@ -11,6 +14,8 @@ namespace Weather
     public class WeatherService
     {
         private HttpClient Client { get; }
+
+        private Regex rxAlerm = new Regex(@"\["".*?""(,"".*?"")+\]");
 
         public WeatherService()
         {
@@ -43,7 +48,16 @@ namespace Weather
             if (offset == -1) { return null; }
 
             json = json[offset..(json.LastIndexOf("]") + 1)];
-            var rawdata = JsonSerializer.Deserialize<List<string[]>>(json);
+            Debug.WriteLine(json);
+
+            MatchCollection matches = rxAlerm.Matches(json);
+
+            var rawdata = new List<string[]>();
+            foreach(Match m in matches)
+            {
+                rawdata.Add(m.Value.Replace("\"","")[1..^1].Split(","));
+            }
+
             List<Alerm> alerms = new();
 
             foreach (string[] row in rawdata)
@@ -98,7 +112,7 @@ namespace Weather
             if (offset == -1) { return null; }
 
             str = str[offset..];
-            CurrentState current = JsonSerializer.Deserialize<CurrentState>(str);
+            CurrentState current = JsonConvert.DeserializeObject<CurrentState>(str);
             return current;
         }
     }
