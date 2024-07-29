@@ -11,11 +11,9 @@ using Weather.Entities;
 
 namespace Weather
 {
-    public class WeatherService
+    public partial class WeatherService
     {
         private HttpClient Client { get; }
-
-        private Regex rxAlerm = new Regex(@"\["".*?""(,"".*?"")+\]");
 
         public WeatherService()
         {
@@ -37,20 +35,20 @@ namespace Weather
             }
             catch
             {
-                return new List<Alerm>();
+                return [];
             }
 
             if (string.IsNullOrWhiteSpace(json))
             {
                 return null;
             }
-            int offset = json.IndexOf("[");
+            int offset = json.IndexOf('[');
             if (offset == -1) { return null; }
 
-            json = json[offset..(json.LastIndexOf("]") + 1)];
+            json = json[offset..(json.LastIndexOf(']') + 1)];
             Debug.WriteLine(json);
 
-            MatchCollection matches = rxAlerm.Matches(json);
+            MatchCollection matches = GetAlermRegex().Matches(json);
 
             var rawdata = new List<string[]>();
             foreach(Match m in matches)
@@ -58,12 +56,12 @@ namespace Weather
                 rawdata.Add(m.Value.Replace("\"","")[1..^1].Split(","));
             }
 
-            List<Alerm> alerms = new();
+            List<Alerm> alerms = [];
 
             foreach (string[] row in rawdata)
             {
                 string[] f = row[1].Split('-', '.');
-                Alerm a = new Alerm
+                Alerm a = new ()
                 {
                     Name = row[0],
                     LocationCode = f[0],
@@ -108,12 +106,15 @@ namespace Weather
                 return null;
             }
 
-            int offset = str.IndexOf("{");
+            int offset = str.IndexOf('{');
             if (offset == -1) { return null; }
 
             str = str[offset..];
             CurrentState current = JsonConvert.DeserializeObject<CurrentState>(str);
             return current;
         }
-    }
+
+		[GeneratedRegex(@"\["".*?""(,"".*?"")+\]")]
+		private static partial Regex GetAlermRegex();
+	}
 }

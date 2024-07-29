@@ -113,7 +113,7 @@ namespace Weather.Alerm
 
         private Color TempColor(string str)
         {
-            int temp = Convert.ToInt32(str);
+            decimal temp = Convert.ToDecimal(str);
             switch (temp)
             {
                 case < -40:
@@ -129,17 +129,17 @@ namespace Weather.Alerm
 
             if (temp > 24)
             {
-                double p = (temp - 24d) / (40 - 24);
+				decimal p = (temp - 24m) / (40 - 24);
                 return GetMidColor(colors[1], colors[0], p);
             }
             else
             {
-                double p = (temp - 24d) / (-40 - 24);
+				decimal p = (temp - 24m) / (-40 - 24);
                 return GetMidColor(colors[1], colors[2], p);
             }
         }
 
-        private static Color GetMidColor(Color color1, Color color2, double p)
+        private static Color GetMidColor(Color color1, Color color2, decimal p)
         {
             byte r = (byte)(color1.R - (color1.R - color2.R) * p);
             byte g = (byte)(color1.G - (color1.G - color2.G) * p);
