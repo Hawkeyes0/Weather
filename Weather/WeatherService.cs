@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,6 +15,8 @@ namespace Weather
     public partial class WeatherService
     {
         private HttpClient Client { get; }
+
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public WeatherService()
         {
@@ -46,7 +49,7 @@ namespace Weather
             if (offset == -1) { return null; }
 
             json = json[offset..(json.LastIndexOf(']') + 1)];
-            Debug.WriteLine(json);
+            logger.Debug($"alerm json: {json}");
 
             MatchCollection matches = GetAlermRegex().Matches(json);
 
@@ -58,33 +61,40 @@ namespace Weather
 
             List<Alerm> alerms = [];
 
-            foreach (string[] row in rawdata)
+            try
             {
-                string[] f = row[1].Split('-', '.');
-                Alerm a = new ()
+                foreach (string[] row in rawdata)
                 {
-                    Name = row[0],
-                    LocationCode = f[0],
-                    AlermTime = DateTime.ParseExact(f[1], "yyyyMMddHHmmss", null),
-                    AlermCode = f[2],
-                    RawAlerm = row[1],
-                    Position = new Position { Long = Convert.ToDecimal(row[2]), Lat = Convert.ToDecimal(row[3]) }
-                };
-                alerms.Add(a);
+                    string[] f = row[1].Split('-', '.');
+                    Alerm a = new()
+                    {
+                        Name = row[0],
+                        LocationCode = f[0],
+                        AlermTime = DateTime.ParseExact(f[1], "yyyyMMddHHmmss", null),
+                        AlermCode = f[2],
+                        RawAlerm = row[1],
+                        Position = new Position { Long = Convert.ToDecimal(row[2]), Lat = Convert.ToDecimal(row[3]) }
+                    };
+                    alerms.Add(a);
 
-                if (!File.Exists(a.PicPath))
-                {
-                    if (!Directory.Exists(Path.GetDirectoryName(a.PicPath)))
+                    if (!File.Exists(a.PicPath))
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(a.PicPath));
-                    }
-                    var resp = await Client.GetAsync(a.PicUrl);
-                    if (resp.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        byte[] buff = await resp.Content.ReadAsByteArrayAsync();
-                        await File.WriteAllBytesAsync(a.PicPath, buff);
+                        if (!Directory.Exists(Path.GetDirectoryName(a.PicPath)))
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(a.PicPath));
+                        }
+                        var resp = await Client.GetAsync(a.PicUrl);
+                        if (resp.StatusCode == System.Net.HttpStatusCode.OK)
+                        {
+                            byte[] buff = await resp.Content.ReadAsByteArrayAsync();
+                            await File.WriteAllBytesAsync(a.PicPath, buff);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "error when parse alerms");
             }
 
             return alerms;

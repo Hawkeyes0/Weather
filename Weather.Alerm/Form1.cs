@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Toolkit.Uwp.Notifications;
+using NLog;
 
 namespace Weather.Alerm
 {
@@ -18,13 +19,13 @@ namespace Weather.Alerm
     {
         private WeatherService WeatherService { get; } = new WeatherService();
 
-        private AlermConverter Converter { get; } = new AlermConverter();
-
         private string LocationCode { get; }
 
-        private HashSet<string> Codes { get; } = new HashSet<string>();
+        private HashSet<string> Codes { get; } = [];
 
-        private Color[] colors = new Color[] { Color.Red, Color.Gray, Color.Blue };
+        private readonly Color[] colors = [Color.Red, Color.Gray, Color.Blue];
+
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public Form1()
         {
@@ -35,16 +36,16 @@ namespace Weather.Alerm
         private void Form1_Load(object sender, EventArgs e)
         {
             timer1.Start();
-            timer1_Tick(null, e);
+            Timer1_Tick(null, e);
             var area = Screen.AllScreens[0].WorkingArea;
             Location = new Point { X = area.Width - Width - 4, Y = area.Height - Height - 4 };
 
             tState.Interval = (int)TimeSpan.FromMinutes(15).TotalMilliseconds;
             tState.Start();
-            tState_Tick(null, null);
+            TState_Tick(null, null);
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void Timer1_Tick(object sender, EventArgs e)
         {
             var alerms = WeatherService.GetAlermListAsync().Result;
             if (alerms == null)
@@ -73,7 +74,7 @@ namespace Weather.Alerm
                     new ToastContentBuilder()
                         .AddArgument("conversationId", $"{a.LocationCode}_{a.AlermTime}_{a.AlermCode}")
                         .AddText($"{a.AlermTime:yyyy-MM-dd HH:mm:ss}发布")
-                        .AddText($"{a.Name}-{Converter.ToText(a.AlermType, a.AlermLevel)}")
+                        .AddText($"{a.Name}-{AlermConverter.ToText(a.AlermType, a.AlermLevel)}")
                         .AddInlineImage(new Uri($"file:///{Path.GetFullPath(a.PicPath).Replace('\\', '/')}"))
                         .Show();
                 }
@@ -81,7 +82,7 @@ namespace Weather.Alerm
 
             _ = Codes.RemoveWhere(e => !rs.Any(a => a.RawAlerm == e));
 
-            Trace.WriteLine($"Update data at {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
+            logger.Trace($"Update data at {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}");
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -91,12 +92,12 @@ namespace Weather.Alerm
             notifyIcon1.Visible = false;
         }
 
-        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void NotifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             WindowState = FormWindowState.Normal;
         }
 
-        private async void tState_Tick(object sender, EventArgs e)
+        private async void TState_Tick(object sender, EventArgs e)
         {
             var state = await WeatherService.GetCurrentStateAsync(LocationCode);
             if (state == null) { return; }

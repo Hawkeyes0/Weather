@@ -50,13 +50,13 @@
             this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
             this.notifyIcon1.Text = "灾害天气预警";
             this.notifyIcon1.Visible = true;
-            this.notifyIcon1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon1_MouseDoubleClick);
+            this.notifyIcon1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.NotifyIcon1_MouseDoubleClick);
             // 
             // timer1
             // 
             this.timer1.Enabled = true;
             this.timer1.Interval = 360000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            this.timer1.Tick += new System.EventHandler(this.Timer1_Tick);
             // 
             // flowLayoutPanel1
             // 
@@ -138,7 +138,7 @@
             // 
             // tState
             // 
-            this.tState.Tick += new System.EventHandler(this.tState_Tick);
+            this.tState.Tick += new System.EventHandler(this.TState_Tick);
             // 
             // Form1
             // 

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Weather
 {
-    public class AlermConverter
+    public static class AlermConverter
     {
-        public string ToText(string alermType, string alermLevel)
+        public static string ToText(string alermType, string alermLevel)
         {
             return $"{TypeToText(alermType)}{LevelToText(alermLevel)}";
         }
